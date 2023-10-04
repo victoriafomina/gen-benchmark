@@ -1,0 +1,35 @@
+name: Build and run long MaxSMT tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      commitSHA:
+        description: Commit SHA
+        required: false
+        type: string
+        default: ""
+
+jobs:
+  prepare-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      logics-matrix: ${{ steps.set-matrices.outputs.maxsmt-tests-matrix }}
+    steps:
+      - name: Print environment variables
+        run: printenv
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check out ${{ github.event.inputs.commit_sha }} commit
+        if: github.event.inputs.commit_sha != ''
+        run: |
+          git config --global --add safe.directory ${GITHUB_WORKSPACE}
+          git fetch
+          git checkout ${{ github.event.inputs.commit_sha }}
+      - id: set-matrix
+        name: Read and print config from maxsmt-tests-matrix.json
+        run: |
+          MAXSMT_TESTS=$(echo $(cat .github/workflows/maxsmt-tests-matrix.json))
+          echo "maxsmt-tests-matrix=$MAXSMT_TESTS" >> $GITHUB_OUTPUT
+          echo $MAXSMT_TESTS
